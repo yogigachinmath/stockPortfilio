@@ -55,3 +55,8 @@ Instructions:
             amount[float],
         
             }
+            
+Here is the Database design
+
+![Screen Shot 2021-02-27 at 13 13 31-fullpage](https://user-images.githubusercontent.com/29297550/109381019-62570200-789d-11eb-9d89-d9a21b22cfaa.png)
+

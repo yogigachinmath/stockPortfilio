@@ -122,7 +122,7 @@ app.get('/', async (req, res, next) => {
   res.send('welcome');
 });
 
-app.listen(5000, () => {
+app.listen(process.env.PORT || 5000, () => {
   console.log('server listening on port 5000');
 });
 

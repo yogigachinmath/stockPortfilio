@@ -2,15 +2,16 @@ prerequisites:
 node,
 postgresql,
 
-Unzip the package and follow the below steps.
 
 Instructions:
 
-1.First Install the npm packages by 'npm install'
+1.Git clone https://github.com/yogigachinmath/stockPortfilio.git 
+   cd stockPortfolio
+   'npm install' to install the npm packages.
 
 2.Setup the database In the config folder, config file Add the database details. 
 
-3.Start the Postgres db local server and create the database manually.
+3.Start the Postgres db local server and create the database manually provide the database name given in the config.
 
 4.The tables are created automatically.
 

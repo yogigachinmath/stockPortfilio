@@ -15,22 +15,42 @@ Instructions:
 4.The tables are created automatically.
 
 5.here are the routes available. 
-    1. To get the Quote of the ticker.
-        GET '/quote/:tinker', params = { ticker };
-    2. To get the portfolio of the user.
-        GET '/portfolio' 
-    3. To get the history of the transactions
-        GET '/history'
-    4. To buy a Share 
-        POST  http://localhost:5000/transaction
-        body {
+   
+   1. To get the Quote of the ticker.
+        
+            GET '/quote/:tinker'
+            params = { ticker }
+   
+   2. To get the portfolio of the user.
+        
+            GET '/portfolio' 
+   
+   3. To get the history of the transactions
+        
+            GET '/history'
+   
+   4. To buy a Share 
+        
+            POST  '/transaction'
+        
+            body {
+        
             type ['buy', 'sell'],
+        
             quantity[int],
+        
             ticker[tickersymbol],
-        }
-    5. to add money to your account
-        POST  http://localhost:5000/transfer
-        body {
+            
+            }
+   
+   5. to add money to your account
+        
+            POST '/transfer'
+        
+            body {
+        
             type[add, remove],
+        
             amount[float],
-        }
+        
+            }

@@ -4,11 +4,10 @@ const {
 } = require('../config/config');
 
 const pool = new Pool({
-  user,
-  password,
-  host,
-  port,
-  database,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  }
 });
 
 module.exports = {

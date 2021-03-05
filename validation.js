@@ -5,7 +5,7 @@ const transferSchema = Joi.object().keys({
     .trim()
     .required()
     .valid(...['add', 'remove']),
-  amount: Joi.number().greater(0).required(),
+  amount: Joi.number().integer().greater(0).required(),
 });
 const transactionSchema = Joi.object().keys({
   type: Joi.string()
@@ -19,6 +19,13 @@ const transactionSchema = Joi.object().keys({
 async function validateTransferSchema(req, res, next) {
   try {
     await transferSchema.validateAsync(req.body);
+    // const { amount } = req.body;
+    // console.log(amount);
+    // if (parseInt(amount, 10) !== amount) {
+    //   console.log('pp');
+    //   next({ Error: 'Validation', msg: 'No Decimal Amounts are allowed' });
+    //   return;
+    // }
     next();
   } catch (err) {
     next({ Error: 'Validation', msg: err.message });

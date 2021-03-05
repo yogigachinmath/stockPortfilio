@@ -1,5 +1,4 @@
 const express = require('express');
-const { pool } = require('./database/connection');
 const db = require('./database/db');
 const validate = require('./validation');
 const errorHandler = require('./errorHandler');
@@ -12,7 +11,7 @@ app.get('/quote/:tinker', async (req, res, next) => {
   const { tinker } = req.params;
   try {
     const jsonres = await services.getQuote(tinker);
-    res.send(jsonres);
+    res.json(jsonres);
   } catch (error) {
     next({ Error: 'QuoteError', msg: error.response.data, status: error.response.status });
   }
@@ -22,13 +21,13 @@ app.get('/portfolio', async (req, res, next) => {
   const portfolio = await db.fetchPortfolio();
   const quotesData = await services.fetchAllQuotes(portfolio);
   const portfolioData = await services.makePortfolio(portfolio, quotesData);
-  res.send(portfolioData);
+  res.json(portfolioData);
 });
 
 app.get('/history', async (req, res, next) => {
   try {
     const history = await db.getTransactionHistory();
-    res.send(history);
+    res.json(history);
   } catch (error) {
     console.error(error);
   }
@@ -56,7 +55,7 @@ app.post('/transaction', validate.validateTransactionSchema, async (req, res, ne
         priceOfEachShare,
         totalAmountOfAllShares,
         parseFloat(currentBalance[0].accountbalance));
-      res.send(addStock);
+      res.json(addStock);
     } else if (type === 'sell') {
       const getStocksOfTicker = await db.fetchStockForQuote(ticker);
       if (!getStocksOfTicker.length) {
@@ -66,7 +65,7 @@ app.post('/transaction', validate.validateTransactionSchema, async (req, res, ne
       if (noOfSharesOwned < quantity) {
         res.status(200).send(`There are only ${noOfSharesOwned} stocks Owned by you`);
       } else {
-        const soldStocks = services.sellStocks(
+        const soldStocks = await services.sellStocks(
           ticker,
           type,
           quantity,
@@ -76,7 +75,7 @@ app.post('/transaction', validate.validateTransactionSchema, async (req, res, ne
           getStocksOfTicker,
           noOfSharesOwned,
         );
-        res.status(200).send('Transaction completed');
+        res.status(200).json(soldStocks);
       }
     }
   } catch (error) {
@@ -92,11 +91,11 @@ app.post('/transfer', validate.validateTransferSchema, async (req, res, next) =>
     if (!currentBalance.length && type === 'remove') {
       res
         .status(200)
-        .send('The current Balance is zero, The amount cannot be Removed');
+        .json('The current Balance is zero, The amount cannot be Removed');
     } else if (type === 'remove' && parseFloat(currentBalance[0].accountbalance) - amount < 0) {
       res
         .status(200)
-        .send(
+        .json(
           `The current Account Balance is ${currentBalance[0].accountbalance}, Low Balance!`,
         );
     } else {
@@ -108,7 +107,7 @@ app.post('/transfer', validate.validateTransferSchema, async (req, res, next) =>
         price,
         amount,
       );
-      res.status(200).send(addMoney);
+      res.status(200).json(addMoney);
     }
   } catch (error) {
     console.log(error);
@@ -126,4 +125,4 @@ app.listen(process.env.PORT || 5000, () => {
   console.log('server listening on port 5000');
 });
 
-db.createTables();  
+db.createTables();

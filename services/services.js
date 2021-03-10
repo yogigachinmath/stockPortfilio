@@ -6,15 +6,19 @@ const url = 'https://cloud.iexapis.com/stable';
 const { token } = require('../config/config');
 
 async function transferAmount(type, price, amount) {
-  const addTransaction = await db.InsertMoneyTranscation(type, amount);
-  const addMoney = await db.UpdateBalanceSheet(
-    price,
-    addTransaction[0].transactionid,
-  );
-  return addMoney;
+  try {
+    const addTransaction = await db.makeTransferTransaction(type, amount);
+    const addMoney = await db.updateBalanceSheet(
+      price,
+      addTransaction[0].transactionid,
+    );
+    return addMoney;
+  } catch (error) {
+    throw error;
+  }
 }
 
-async function getQuote(tinker) {
+async function fetchQuote(tinker) {
   try {
     const jsonres = await axios.get(
       `${url}/stock/${tinker}/quote?token=${token}`,
@@ -23,7 +27,7 @@ async function getQuote(tinker) {
   } catch (error) {
     throw error;
   }
-}
+} 
 
 async function makeTransactionAndAddStock(
   ticker,
@@ -34,19 +38,19 @@ async function makeTransactionAndAddStock(
   currentBalance,
 ) {
   try {
-    const addTransaction = await db.InsertStockTranscation(
+    const addTransaction = await db.makeStockTransaction(
       ticker,
       type,
       quantity,
       priceOfEachShare,
       amount,
     );
-    const addStock = await db.AddStock(
+    const addStock = await db.addStock(
       ticker,
       quantity,
       addTransaction[0].transactionid,
     );
-    const updateAmount = await db.UpdateBalanceSheet(
+    const updateAmount = await db.updateBalanceSheet(
       currentBalance - amount,
       addTransaction[0].transactionid,
     );
@@ -56,7 +60,7 @@ async function makeTransactionAndAddStock(
   }
 }
 
-function countNoOfShares(stocksData) {
+function countShares(stocksData) {
   let count = 0;
   stocksData.forEach((stock) => {
     count += stock.quantity;
@@ -92,53 +96,59 @@ async function sellStocks(
   currentBalance,
   stockData,
 ) {
-  const addTransaction = await db.InsertStockTranscation(
-    ticker,
-    type,
-    quantity,
-    priceOfEachShare,
-    totalAmountOfAllShares,
-  );
-  const queries = makeQueries(stockData, quantity);
-  const result = await db.updatePortfolio(queries);
-  const updateAmount = await db.UpdateBalanceSheet(
-    currentBalance + totalAmountOfAllShares,
-    addTransaction[0].transactionid,
-  );
-  return { addTransaction };
+  try {
+    const addTransaction = await db.makeStockTransaction(
+      ticker,
+      type,
+      quantity,
+      priceOfEachShare,
+      totalAmountOfAllShares,
+    );
+    const queries = makeQueries(stockData, quantity);
+    const result = await db.updatePortfolio(queries);
+    const updateAmount = await db.updateBalanceSheet(
+      currentBalance + totalAmountOfAllShares,
+      addTransaction[0].transactionid,
+    );
+    return { addTransaction };
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function fetchAllQuotes(data) {
-  const Quotes = new Set();
-  data.forEach((element) => {
-    Quotes.add(element.ticker);
-  });
-  const res = [];
-  for (const quote of Quotes) {
-    res.push(getQuote(quote));
+  try {
+    const Quotes = new Set();
+    data.forEach((quote) => {
+      Quotes.add(quote.ticker);
+    });
+    const result = await Promise.all(Array.from(Quotes).map((quote) => fetchQuote(quote)));
+    return result.reduce((acc, quote) => {
+      const quoteSymbol = quote.symbol;
+      acc[0][quoteSymbol] = quote;
+      return acc;
+    }, [{}]);
+  } catch (error) {
+    throw error;
   }
-  const result = await Promise.all(res);
-  return result.reduce((acc, quote) => {
-    const quoteSymbol = quote.symbol;
-    acc[0][quoteSymbol] = quote;
-    return acc;
-  }, [{}]);
 }
 
 function makePortfolio(portfolio, quotesData) {
-  portfolio.forEach((element) => {
+  const portfolioData = portfolio;
+  portfolio.forEach((element, index) => {
     const ticker = element.ticker.toUpperCase();
-    element['marketCap'] = quotesData[0][ticker].marketCap;
-    element['open'] = quotesData[0][ticker].iexOpen;
-    element['totalValue'] = quotesData[0][ticker].iexOpen * element['quantity'];
+    portfolioData[index].marketCap = quotesData[0][ticker].marketCap;
+    portfolioData[index].open = quotesData[0][ticker].iexOpen;
+    portfolioData[index].totalValue = quotesData[0][ticker].iexOpen * element.quantity;
   });
-  return portfolio;
+  return portfolioData;
 }
+
 module.exports = {
   transferAmount,
-  getQuote,
+  fetchQuote,
   makeTransactionAndAddStock,
-  countNoOfShares,
+  countShares,
   sellStocks,
   fetchAllQuotes,
   makePortfolio,

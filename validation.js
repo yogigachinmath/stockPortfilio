@@ -19,13 +19,6 @@ const transactionSchema = Joi.object().keys({
 async function validateTransferSchema(req, res, next) {
   try {
     await transferSchema.validateAsync(req.body);
-    // const { amount } = req.body;
-    // console.log(amount);
-    // if (parseInt(amount, 10) !== amount) {
-    //   console.log('pp');
-    //   next({ Error: 'Validation', msg: 'No Decimal Amounts are allowed' });
-    //   return;
-    // }
     next();
   } catch (err) {
     next({ Error: 'Validation', msg: err.message });
